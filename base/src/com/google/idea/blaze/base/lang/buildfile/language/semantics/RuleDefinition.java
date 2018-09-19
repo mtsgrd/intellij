@@ -15,10 +15,11 @@
  */
 package com.google.idea.blaze.base.lang.buildfile.language.semantics;
 
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.query2.proto.proto2api.Build;
-import com.google.idea.common.guava.GuavaHelper;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,10 +49,9 @@ public class RuleDefinition implements Serializable {
       map.put(NAME_ATTRIBUTE.name, NAME_ATTRIBUTE);
     }
     ImmutableMap<String, AttributeDefinition> sortedMap =
-        map.entrySet()
-            .stream()
+        map.entrySet().stream()
             .sorted(Map.Entry.comparingByValue())
-            .collect(GuavaHelper.toImmutableMap(Entry::getKey, Entry::getValue));
+            .collect(toImmutableMap(Entry::getKey, Entry::getValue));
     return new RuleDefinition(
         rule.getName(), sortedMap, rule.hasDocumentation() ? rule.getDocumentation() : null);
   }

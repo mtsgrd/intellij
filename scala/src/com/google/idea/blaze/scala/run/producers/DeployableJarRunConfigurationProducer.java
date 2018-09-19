@@ -62,7 +62,7 @@ class DeployableJarRunConfigurationProducer
       return false;
     }
 
-    Label label = target.key.label;
+    Label label = target.getKey().getLabel();
     File jarFile = getDeployJarFile(label, context.getProject());
     if (jarFile == null) {
       return false;
@@ -99,7 +99,7 @@ class DeployableJarRunConfigurationProducer
     if (target == null) {
       return false;
     }
-    Label label = target.key.label;
+    Label label = target.getKey().getLabel();
     File jarFile = getDeployJarFile(label, context.getProject());
     if (jarFile == null) {
       return false;

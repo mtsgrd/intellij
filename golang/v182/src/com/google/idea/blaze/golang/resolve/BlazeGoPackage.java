@@ -75,27 +75,25 @@ public class BlazeGoPackage extends GoPackage {
     return new BlazeGoPackage(
         project,
         importPath,
-        target.kind.ruleType == RuleType.TEST,
-        target.key.label,
+        target.getKind().ruleType == RuleType.TEST,
+        target.getKey().getLabel(),
         getSourceFiles(target, projectData));
   }
 
   public static Collection<File> getSourceFiles(
       TargetIdeInfo target, BlazeProjectData projectData) {
-    if (target.kind == Kind.GO_WRAP_CC) {
+    if (target.getKind() == Kind.GO_WRAP_CC) {
       return ImmutableList.of(getWrapCcGoFile(target, projectData.blazeInfo));
     }
-    return Preconditions.checkNotNull(target.goIdeInfo)
-        .sources
-        .stream()
+    return Preconditions.checkNotNull(target.getGoIdeInfo()).getSources().stream()
         .map(projectData.artifactLocationDecoder::decode)
         .collect(Collectors.toList());
   }
 
   private static File getWrapCcGoFile(TargetIdeInfo target, BlazeInfo blazeInfo) {
-    String blazePackage = target.key.label.blazePackage().relativePath();
+    String blazePackage = target.getKey().getLabel().blazePackage().relativePath();
     File directory = new File(blazeInfo.getGenfilesDirectory(), blazePackage);
-    String filename = blazePackage + '/' + target.key.label.targetName() + ".go";
+    String filename = blazePackage + '/' + target.getKey().getLabel().targetName() + ".go";
     filename = filename.replace("_", "__");
     filename = filename.replace('/', '_');
     return new File(directory, filename);
@@ -115,8 +113,7 @@ public class BlazeGoPackage extends GoPackage {
   }
 
   private static VirtualFile[] getDirectories(Collection<File> files) {
-    return files
-        .stream()
+    return files.stream()
         .map(File::getParentFile)
         .filter(Objects::nonNull)
         .distinct()
@@ -130,8 +127,7 @@ public class BlazeGoPackage extends GoPackage {
     if (cachedGoFiles == null) {
       PsiManager psiManager = PsiManager.getInstance(getProject());
       cachedGoFiles =
-          files
-              .stream()
+          files.stream()
               .map(VfsUtils::resolveVirtualFile)
               .filter(Objects::nonNull)
               .map(psiManager::findFile)

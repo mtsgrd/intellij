@@ -52,10 +52,10 @@ public class CPrefetchFileSource implements PrefetchFileSource {
     // Prefetch all non-project CPP header files encountered during sync
     Predicate<ArtifactLocation> shouldPrefetch =
         location -> {
-          if (!location.isSource || location.isExternal) {
+          if (!location.isSource() || location.isExternal()) {
             return false;
           }
-          WorkspacePath path = WorkspacePath.createIfValid(location.relativePath);
+          WorkspacePath path = WorkspacePath.createIfValid(location.getRelativePath());
           if (path == null || importRoots.containsWorkspacePath(path)) {
             return false;
           }
@@ -64,10 +64,10 @@ public class CPrefetchFileSource implements PrefetchFileSource {
         };
     ArtifactLocationDecoder decoder = blazeProjectData.artifactLocationDecoder;
     for (TargetIdeInfo target : blazeProjectData.targetMap.targets()) {
-      if (target.cIdeInfo == null) {
+      if (target.getcIdeInfo() == null) {
         continue;
       }
-      target.sources.stream().filter(shouldPrefetch).map(decoder::decode).forEach(files::add);
+      target.getSources().stream().filter(shouldPrefetch).map(decoder::decode).forEach(files::add);
     }
   }
 

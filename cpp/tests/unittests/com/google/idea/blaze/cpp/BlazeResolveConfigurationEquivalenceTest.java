@@ -113,6 +113,8 @@ public class BlazeResolveConfigurationEquivalenceTest extends BlazeTestCase {
         .setImportSettings(
             new BlazeImportSettings("", "", "", "", buildSystemProvider.buildSystem()));
 
+    registerExtensionPoint(BlazeCompilerFlagsProcessor.EP_NAME, BlazeCompilerFlagsProcessor.class);
+
     context.addOutputSink(IssueOutput.class, errorCollector);
 
     resolver = new BlazeConfigurationResolver(project);

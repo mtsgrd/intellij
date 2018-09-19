@@ -75,6 +75,7 @@ message AndroidIdeInfo {
   string legacy_resources = 9;
   LibraryArtifact resource_jar = 10;
   string idl_import_root = 11;
+  map<string, string> manifest_values = 12;
 }
 
 message AndroidSdkIdeInfo {

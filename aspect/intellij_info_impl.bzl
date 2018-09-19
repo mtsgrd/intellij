@@ -387,9 +387,6 @@ def collect_c_toolchain_info(target, ctx, semantics, ide_info, ide_info_file, ou
         compiler_options = cpp_fragment.compiler_options(ctx.features)
         unfiltered_compiler_options = cpp_fragment.unfiltered_compiler_options(ctx.features)
 
-    if hasattr(semantics, "cc"):
-        cpp_options = semantics.cc.augment_toolchain_cxx_options(cpp_options)
-
     c_toolchain_info = struct_omit_none(
         target_name = cpp_toolchain.target_gnu_system_name,
         base_compiler_option = compiler_options,
@@ -606,6 +603,7 @@ def collect_android_info(target, ctx, semantics, ide_info, ide_info_file, output
         java_package = android.java_package,
         idl_import_root = android.idl.import_root if hasattr(android.idl, "import_root") else None,
         manifest = artifact_location(android.manifest),
+        manifest_values = [struct_omit_none(key = key, value = value) for key, value in ctx.rule.attr.manifest_values.items()] if hasattr(ctx.rule.attr, "manifest_values") else None,
         apk = artifact_location(android.apk),
         dependency_apk = [artifact_location(apk) for apk in android.apks_under_test],
         has_idl_sources = android.idl.output != None,

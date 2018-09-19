@@ -29,14 +29,15 @@ import com.google.idea.blaze.base.sync.BlazeSyncParams.SyncMode;
 import com.google.idea.blaze.base.sync.SyncListener;
 import com.google.idea.blaze.base.sync.workspace.WorkspacePathResolver;
 import com.google.idea.common.transactions.Transactions;
-import com.google.idea.sdkcompat.run.RunManagerCompatUtils;
 import com.intellij.execution.BeforeRunTask;
+import com.intellij.execution.BeforeRunTaskProvider;
 import com.intellij.execution.RunManager;
 import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.impl.RunManagerImpl;
 import com.intellij.openapi.project.Project;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -106,14 +107,36 @@ public class BlazeRunConfigurationSyncListener extends SyncListener.Adapter {
   }
 
   private static boolean enableBlazeBeforeRunTask(RunConfiguration config) {
+    if (config.getBeforeRunTasks().stream()
+        .noneMatch(t -> t.getProviderId().equals(BlazeBeforeRunTaskProvider.ID))) {
+      return addBlazeBeforeRunTask(config);
+    }
     boolean changed = false;
-    for (BeforeRunTask task : RunManagerCompatUtils.getBeforeRunTasks(config)) {
+    for (BeforeRunTask task : config.getBeforeRunTasks()) {
       if (task.getProviderId().equals(BlazeBeforeRunTaskProvider.ID) && !task.isEnabled()) {
         changed = true;
         task.setEnabled(true);
       }
     }
     return changed;
+  }
+
+  private static boolean addBlazeBeforeRunTask(RunConfiguration config) {
+    BeforeRunTaskProvider<?> provider =
+        BlazeBeforeRunTaskProvider.getProvider(config.getProject(), BlazeBeforeRunTaskProvider.ID);
+    if (provider == null) {
+      return false;
+    }
+    BeforeRunTask<?> task = provider.createTask(config);
+    if (task == null) {
+      return false;
+    }
+    task.setEnabled(true);
+    @SuppressWarnings("rawtypes")
+    List<BeforeRunTask> tasks = new ArrayList<>(config.getBeforeRunTasks());
+    tasks.add(task);
+    config.setBeforeRunTasks(tasks);
+    return true;
   }
 
   private static Set<File> getImportedRunConfigurations(

@@ -36,8 +36,6 @@ import com.google.idea.blaze.base.sync.data.BlazeDataStorage;
 import com.google.idea.blaze.base.sync.data.BlazeProjectDataManager;
 import com.google.idea.blaze.base.sync.libraries.LibrarySource;
 import com.google.idea.blaze.java.sync.model.BlazeJarLibrary;
-import com.google.idea.sdkcompat.kotlin.CommonCompilerArgumentsCompatUtils;
-import com.google.idea.sdkcompat.kotlin.KotlinLibraryConfigurator;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.module.Module;
@@ -53,6 +51,8 @@ import javax.annotation.Nullable;
 import org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments;
 import org.jetbrains.kotlin.config.LanguageVersion;
 import org.jetbrains.kotlin.idea.compiler.configuration.KotlinCommonCompilerArgumentsHolder;
+import org.jetbrains.kotlin.idea.configuration.KotlinJavaModuleConfigurator;
+import org.jetbrains.kotlin.idea.configuration.NotificationMessageCollector;
 
 /** Supports Kotlin. */
 public class BlazeKotlinSyncPlugin implements BlazeSyncPlugin {
@@ -102,17 +102,20 @@ public class BlazeKotlinSyncPlugin implements BlazeSyncPlugin {
     LanguageVersion languageLevel = getLanguageVersion(findToolchain(blazeProjectData.targetMap));
     String versionString = languageLevel.getVersionString();
     CommonCompilerArguments settings =
-        CommonCompilerArgumentsCompatUtils.getUnfrozenSettings(project);
+        (CommonCompilerArguments)
+            KotlinCommonCompilerArgumentsHolder.Companion.getInstance(project)
+                .getSettings()
+                .unfrozen();
     boolean updated = false;
-    String apiVersion = CommonCompilerArgumentsCompatUtils.getApiVersion(settings);
-    String languageVersion = CommonCompilerArgumentsCompatUtils.getLanguageVersion(settings);
+    String apiVersion = settings.getApiVersion();
+    String languageVersion = settings.getLanguageVersion();
     if (apiVersion == null || !apiVersion.equals(versionString)) {
       updated = true;
-      CommonCompilerArgumentsCompatUtils.setApiVersion(settings, versionString);
+      settings.setApiVersion(versionString);
     }
     if (languageVersion == null || !languageVersion.equals(versionString)) {
       updated = true;
-      CommonCompilerArgumentsCompatUtils.setLanguageVersion(settings, versionString);
+      settings.setLanguageVersion(versionString);
     }
     if (updated) {
       KotlinCommonCompilerArgumentsHolder.Companion.getInstance(project).setSettings(settings);
@@ -138,7 +141,7 @@ public class BlazeKotlinSyncPlugin implements BlazeSyncPlugin {
     if (toolchain == null) {
       return DEFAULT_VERSION;
     }
-    LanguageVersion version = LanguageVersion.fromVersionString(toolchain.languageVersion);
+    LanguageVersion version = LanguageVersion.fromVersionString(toolchain.getLanguageVersion());
     return version != null ? version : DEFAULT_VERSION;
   }
 
@@ -148,23 +151,23 @@ public class BlazeKotlinSyncPlugin implements BlazeSyncPlugin {
       return ImmutableList.of();
     }
     List<BlazeJarLibrary> libraries = new ArrayList<>();
-    for (Label label : toolchain.sdkTargets) {
+    for (Label label : toolchain.getSdkTargets()) {
       TargetIdeInfo target = blazeProjectData.targetMap.get(TargetKey.forPlainTarget(label));
-      if (target == null || target.javaIdeInfo == null) {
+      if (target == null || target.getJavaIdeInfo() == null) {
         continue;
       }
       libraries.addAll(
-          target.javaIdeInfo.jars.stream().map(BlazeJarLibrary::new).collect(Collectors.toList()));
+          target.getJavaIdeInfo().getJars().stream()
+              .map(BlazeJarLibrary::new)
+              .collect(Collectors.toList()));
     }
     return libraries;
   }
 
   @Nullable
   private static KotlinToolchainIdeInfo findToolchain(TargetMap targets) {
-    return targets
-        .targets()
-        .stream()
-        .map(t -> t.kotlinToolchainIdeInfo)
+    return targets.targets().stream()
+        .map(TargetIdeInfo::getKotlinToolchainIdeInfo)
         .filter(Objects::nonNull)
         .findFirst()
         .orElse(null);
@@ -196,5 +199,27 @@ public class BlazeKotlinSyncPlugin implements BlazeSyncPlugin {
         () ->
             ModuleManager.getInstance(project)
                 .findModuleByName(BlazeDataStorage.WORKSPACE_MODULE_NAME));
+  }
+
+  /**
+   * We want to configure only a single module, without a user-facing dialog (the configuration
+   * process takes O(seconds) per module, on the EDT, and there can be 100s of modules for Android
+   * Studio).
+   *
+   * <p>The single-module configuration method isn't exposed though, so we need to subclass the
+   * configurator.
+   *
+   * <p>TODO(brendandouglas): remove this hack as soon as there's an appropriate upstream method.
+   */
+  private static class KotlinLibraryConfigurator extends KotlinJavaModuleConfigurator {
+    static final KotlinLibraryConfigurator INSTANCE = new KotlinLibraryConfigurator();
+
+    void configureModule(Project project, Module module) {
+      configureModule(
+          module,
+          getDefaultPathToJarFile(project),
+          null,
+          new NotificationMessageCollector(project, "Configuring Kotlin", "Configuring Kotlin"));
+    }
   }
 }

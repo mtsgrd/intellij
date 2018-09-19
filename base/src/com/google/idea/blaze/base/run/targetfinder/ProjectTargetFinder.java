@@ -47,9 +47,8 @@ class ProjectTargetFinder implements TargetFinder {
       return target.toTargetInfo();
     }
     // otherwise just return any matching target
-    return map.targets()
-        .stream()
-        .filter(t -> Objects.equals(label, t.key.label))
+    return map.targets().stream()
+        .filter(t -> Objects.equals(label, t.getKey().getLabel()))
         .findFirst()
         .map(TargetIdeInfo::toTargetInfo)
         .orElse(null);

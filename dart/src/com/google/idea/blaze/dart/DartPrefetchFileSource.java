@@ -59,7 +59,7 @@ public class DartPrefetchFileSource implements PrefetchFileSource {
           if (location.isGenerated()) {
             return true;
           }
-          WorkspacePath path = WorkspacePath.createIfValid(location.relativePath);
+          WorkspacePath path = WorkspacePath.createIfValid(location.getRelativePath());
           return path != null && !importRoots.containsWorkspacePath(path);
         };
     List<File> sourceFiles =
@@ -81,6 +81,8 @@ public class DartPrefetchFileSource implements PrefetchFileSource {
   }
 
   private static Collection<ArtifactLocation> getDartSources(TargetIdeInfo target) {
-    return target.dartIdeInfo != null ? target.dartIdeInfo.sources : ImmutableList.of();
+    return target.getDartIdeInfo() != null
+        ? target.getDartIdeInfo().getSources()
+        : ImmutableList.of();
   }
 }

@@ -40,7 +40,7 @@ import javax.swing.Icon;
 
 class BlazeGoAdditionalLibraryRootsProvider extends AdditionalLibraryRootsProvider {
   private static final BoolExperiment useGoAdditionalLibraryRootsProvider =
-      new BoolExperiment("use.go.additional.library.roots.provider", true);
+      new BoolExperiment("use.go.additional.library.roots.provider2", true);
 
   @Override
   public Collection<SyntheticLibrary> getAdditionalProjectLibraries(Project project) {
@@ -73,11 +73,8 @@ class BlazeGoAdditionalLibraryRootsProvider extends AdditionalLibraryRootsProvid
             return path == null || !importRoots.containsWorkspacePath(path);
           };
       this.files =
-          projectData
-              .targetMap
-              .targets()
-              .stream()
-              .filter(t -> t.goIdeInfo != null)
+          projectData.targetMap.targets().stream()
+              .filter(t -> t.getGoIdeInfo() != null)
               .flatMap(t -> BlazeGoPackage.getSourceFiles(t, projectData).stream())
               .filter(isExternal)
               .distinct()
@@ -88,7 +85,7 @@ class BlazeGoAdditionalLibraryRootsProvider extends AdditionalLibraryRootsProvid
 
     @Override
     public Collection<VirtualFile> getSourceRoots() {
-      return files;
+      return files.stream().filter(VirtualFile::isValid).collect(ImmutableList.toImmutableList());
     }
 
     @Override

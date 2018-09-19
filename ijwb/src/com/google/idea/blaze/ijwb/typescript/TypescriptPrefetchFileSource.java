@@ -55,10 +55,10 @@ public class TypescriptPrefetchFileSource implements PrefetchFileSource {
     // Prefetch all non-project ts source files found during sync
     Predicate<ArtifactLocation> shouldPrefetch =
         location -> {
-          if (!location.isSource) {
+          if (!location.isSource()) {
             return false;
           }
-          WorkspacePath path = WorkspacePath.createIfValid(location.relativePath);
+          WorkspacePath path = WorkspacePath.createIfValid(location.getRelativePath());
           if (path == null || importRoots.containsWorkspacePath(path)) {
             return false;
           }
@@ -88,11 +88,11 @@ public class TypescriptPrefetchFileSource implements PrefetchFileSource {
   }
 
   private static Collection<ArtifactLocation> getJsSources(TargetIdeInfo target) {
-    if (target.tsIdeInfo != null) {
-      return target.tsIdeInfo.sources;
+    if (target.getTsIdeInfo() != null) {
+      return target.getTsIdeInfo().getSources();
     }
-    if (target.kind.languageClass == LanguageClass.TYPESCRIPT) {
-      return target.sources;
+    if (target.getKind().languageClass == LanguageClass.TYPESCRIPT) {
+      return target.getSources();
     }
     return ImmutableList.of();
   }

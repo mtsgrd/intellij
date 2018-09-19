@@ -23,12 +23,21 @@ import javax.annotation.Nullable;
 public class GoIdeInfo implements Serializable {
   private static final long serialVersionUID = 2L;
 
-  public final ImmutableList<ArtifactLocation> sources;
-  @Nullable public final String importPath;
+  private final ImmutableList<ArtifactLocation> sources;
+  @Nullable private final String importPath;
 
   public GoIdeInfo(ImmutableList<ArtifactLocation> sources, @Nullable String importPath) {
     this.sources = sources;
     this.importPath = importPath;
+  }
+
+  public ImmutableList<ArtifactLocation> getSources() {
+    return sources;
+  }
+
+  @Nullable
+  public String getImportPath() {
+    return importPath;
   }
 
   public static Builder builder() {
@@ -60,10 +69,10 @@ public class GoIdeInfo implements Serializable {
     return "GoIdeInfo{"
         + "\n"
         + "  sources="
-        + sources
+        + getSources()
         + "\n"
         + "  importPath="
-        + importPath
+        + getImportPath()
         + "\n"
         + '}';
   }

@@ -239,17 +239,17 @@ final class BlazeConfigurationResolver {
       TargetMap targetMap, ImmutableMap<TargetKey, CToolchainIdeInfo> toolchainLookupMap) {
     Set<ExecutionRootPath> paths = Sets.newHashSet();
     for (TargetIdeInfo target : targetMap.targets()) {
-      if (target.cIdeInfo != null) {
-        paths.addAll(target.cIdeInfo.localIncludeDirectories);
-        paths.addAll(target.cIdeInfo.transitiveSystemIncludeDirectories);
-        paths.addAll(target.cIdeInfo.transitiveIncludeDirectories);
-        paths.addAll(target.cIdeInfo.transitiveQuoteIncludeDirectories);
+      if (target.getcIdeInfo() != null) {
+        paths.addAll(target.getcIdeInfo().getLocalIncludeDirectories());
+        paths.addAll(target.getcIdeInfo().getTransitiveSystemIncludeDirectories());
+        paths.addAll(target.getcIdeInfo().getTransitiveIncludeDirectories());
+        paths.addAll(target.getcIdeInfo().getTransitiveQuoteIncludeDirectories());
       }
     }
     Set<CToolchainIdeInfo> toolchains = new LinkedHashSet<>(toolchainLookupMap.values());
     for (CToolchainIdeInfo toolchain : toolchains) {
-      paths.addAll(toolchain.builtInIncludeDirectories);
-      paths.addAll(toolchain.unfilteredToolchainSystemIncludes);
+      paths.addAll(toolchain.getBuiltInIncludeDirectories());
+      paths.addAll(toolchain.getUnfilteredToolchainSystemIncludes());
     }
     return paths;
   }
@@ -260,8 +260,10 @@ final class BlazeConfigurationResolver {
           String locationExtension = FileUtilRt.getExtension(location.getRelativePath());
           return CFileExtensions.SOURCE_EXTENSIONS.contains(locationExtension);
         };
-    return target.cIdeInfo != null
-        && target.cIdeInfo.sources.stream().filter(ArtifactLocation::isSource).anyMatch(isCompiled);
+    return target.getcIdeInfo() != null
+        && target.getcIdeInfo().getSources().stream()
+            .filter(ArtifactLocation::isSource)
+            .anyMatch(isCompiled);
   }
 
   private void buildBlazeConfigurationData(
@@ -284,17 +286,15 @@ final class BlazeConfigurationResolver {
               context.push(new TimingScope("Build C configuration map", EventType.Other));
 
               ProjectViewTargetImportFilter filter =
-                  new ProjectViewTargetImportFilter(project, workspaceRoot, projectViewSet);
+                  new ProjectViewTargetImportFilter(
+                      Blaze.getBuildSystem(project), workspaceRoot, projectViewSet);
 
               ConcurrentMap<TargetKey, BlazeResolveConfigurationData> targetToData =
                   Maps.newConcurrentMap();
               List<ListenableFuture<?>> targetToDataFutures =
-                  blazeProjectData
-                      .targetMap
-                      .targets()
-                      .stream()
-                      .filter(target -> target.kind.languageClass == LanguageClass.C)
-                      .filter(target -> target.kind != Kind.CC_TOOLCHAIN)
+                  blazeProjectData.targetMap.targets().stream()
+                      .filter(target -> target.getKind().languageClass == LanguageClass.C)
+                      .filter(target -> target.getKind() != Kind.CC_TOOLCHAIN)
                       .filter(filter::isSourceTarget)
                       .filter(BlazeConfigurationResolver::containsCompiledSources)
                       .map(
@@ -310,7 +310,7 @@ final class BlazeConfigurationResolver {
                                             compilerInfoCache,
                                             executionRootPathResolver);
                                     if (data != null) {
-                                      targetToData.put(target.key, data);
+                                      targetToData.put(target.getKey(), data);
                                     }
                                     return null;
                                   }))
@@ -326,12 +326,7 @@ final class BlazeConfigurationResolver {
                 logger.error("Could not build C resolve configurations", e);
                 return;
               }
-              findEquivalenceClasses(
-                  context,
-                  project,
-                  targetToData,
-                  oldConfigurationData,
-                  builder);
+              findEquivalenceClasses(context, project, targetToData, oldConfigurationData, builder);
             });
   }
 
@@ -395,8 +390,8 @@ final class BlazeConfigurationResolver {
       ImmutableMap<CToolchainIdeInfo, BlazeCompilerSettings> compilerSettingsMap,
       CompilerInfoCacheAdapter compilerInfoCache,
       ExecutionRootPathResolver executionRootPathResolver) {
-    TargetKey targetKey = target.key;
-    CIdeInfo cIdeInfo = target.cIdeInfo;
+    TargetKey targetKey = target.getKey();
+    CIdeInfo cIdeInfo = target.getcIdeInfo();
     if (cIdeInfo == null) {
       return null;
     }

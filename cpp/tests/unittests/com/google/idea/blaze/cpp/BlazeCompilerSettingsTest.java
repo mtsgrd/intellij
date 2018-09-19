@@ -37,6 +37,8 @@ public class BlazeCompilerSettingsTest extends BlazeTestCase {
   @Override
   protected void initTest(Container applicationServices, Container projectServices) {
     CPPEnvironmentAdapter.registerForTest(applicationServices.getPicoContainer());
+
+    registerExtensionPoint(BlazeCompilerFlagsProcessor.EP_NAME, BlazeCompilerFlagsProcessor.class);
   }
 
   @Test

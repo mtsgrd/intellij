@@ -58,10 +58,10 @@ public class JavascriptPrefetchFileSource implements PrefetchFileSource {
     // Prefetch all non-project js source files found during sync
     Predicate<ArtifactLocation> shouldPrefetch =
         location -> {
-          if (!location.isSource) {
+          if (!location.isSource()) {
             return false;
           }
-          WorkspacePath path = WorkspacePath.createIfValid(location.relativePath);
+          WorkspacePath path = WorkspacePath.createIfValid(location.getRelativePath());
           if (path == null || importRoots.containsWorkspacePath(path)) {
             return false;
           }
@@ -91,11 +91,11 @@ public class JavascriptPrefetchFileSource implements PrefetchFileSource {
   }
 
   private static Collection<ArtifactLocation> getJsSources(TargetIdeInfo target) {
-    if (target.jsIdeInfo != null) {
-      return target.jsIdeInfo.sources;
+    if (target.getJsIdeInfo() != null) {
+      return target.getJsIdeInfo().getSources();
     }
-    if (target.kind.languageClass == LanguageClass.JAVASCRIPT) {
-      return target.sources;
+    if (target.getKind().languageClass == LanguageClass.JAVASCRIPT) {
+      return target.getSources();
     }
     return ImmutableList.of();
   }

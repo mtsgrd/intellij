@@ -263,11 +263,11 @@ final class BlazeResolveConfiguration extends OCResolveConfigurationAdapter {
     ImmutableList.Builder<VirtualFile> builder = ImmutableList.builder();
 
     TargetIdeInfo targetIdeInfo = blazeProjectData.targetMap.get(targetKey);
-    if (targetIdeInfo.cIdeInfo == null) {
+    if (targetIdeInfo.getcIdeInfo() == null) {
       return ImmutableList.of();
     }
 
-    for (ArtifactLocation sourceArtifact : targetIdeInfo.sources) {
+    for (ArtifactLocation sourceArtifact : targetIdeInfo.getSources()) {
       File file = blazeProjectData.artifactLocationDecoder.decode(sourceArtifact);
       VirtualFile vf = VirtualFileSystemProvider.getInstance().getSystem().findFileByIoFile(file);
       if (vf == null) {

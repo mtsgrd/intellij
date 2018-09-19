@@ -36,10 +36,10 @@ import com.google.idea.blaze.base.settings.Blaze;
 import com.google.idea.blaze.base.settings.BuildSystem;
 import com.google.idea.blaze.base.sync.data.BlazeProjectDataManager;
 import com.google.idea.common.experiments.BoolExperiment;
-import com.google.idea.sdkcompat.smrunner.OutputToGeneralTestEventsConverterAdapter;
 import com.intellij.execution.process.ProcessOutputTypes;
 import com.intellij.execution.testframework.TestConsoleProperties;
 import com.intellij.execution.testframework.sm.runner.GeneralTestEventsProcessor;
+import com.intellij.execution.testframework.sm.runner.OutputToGeneralTestEventsConverter;
 import com.intellij.execution.testframework.sm.runner.events.TestFailedEvent;
 import com.intellij.execution.testframework.sm.runner.events.TestFinishedEvent;
 import com.intellij.execution.testframework.sm.runner.events.TestIgnoredEvent;
@@ -61,7 +61,7 @@ import javax.annotation.Nullable;
 import jetbrains.buildServer.messages.serviceMessages.TestSuiteStarted;
 
 /** Converts blaze test runner xml logs to smRunner events. */
-public class BlazeXmlToTestEventsConverter extends OutputToGeneralTestEventsConverterAdapter {
+public class BlazeXmlToTestEventsConverter extends OutputToGeneralTestEventsConverter {
 
   private static final ErrorOrFailureOrSkipped NO_ERROR = new ErrorOrFailureOrSkipped();
   private static final BoolExperiment removeZeroRunTimeCheck =
@@ -82,7 +82,12 @@ public class BlazeXmlToTestEventsConverter extends OutputToGeneralTestEventsConv
   }
 
   @Override
-  public void processTestSuites() {
+  public void flushBufferOnProcessTermination(int exitCode) {
+    super.flushBufferOnProcessTermination(exitCode);
+    processTestSuites();
+  }
+
+  private void processTestSuites() {
     onStartTesting();
     getProcessor().onTestsReporterAttached();
 

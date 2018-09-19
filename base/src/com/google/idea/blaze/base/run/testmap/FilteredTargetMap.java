@@ -92,8 +92,8 @@ public class FilteredTargetMap {
       ArtifactLocationDecoder artifactLocationDecoder, Collection<TargetIdeInfo> targets) {
     Multimap<File, TargetKey> result = ArrayListMultimap.create();
     for (TargetIdeInfo target : targets) {
-      for (ArtifactLocation source : target.sources) {
-        result.put(artifactLocationDecoder.decode(source), target.key);
+      for (ArtifactLocation source : target.getSources()) {
+        result.put(artifactLocationDecoder.decode(source), target.getKey());
       }
     }
     return result;

@@ -18,6 +18,8 @@ package com.google.idea.blaze.ijwb.javascript;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import com.google.idea.blaze.base.ideinfo.ArtifactLocation;
+import com.google.idea.blaze.base.ideinfo.JsIdeInfo;
+import com.google.idea.blaze.base.ideinfo.TargetIdeInfo;
 import com.google.idea.blaze.base.io.VfsUtils;
 import com.google.idea.blaze.base.model.BlazeProjectData;
 import com.google.idea.blaze.base.model.primitives.LanguageClass;
@@ -40,7 +42,7 @@ import javax.swing.Icon;
 
 class BlazeJavascriptAdditionalLibraryRootsProvider extends AdditionalLibraryRootsProvider {
   private static final BoolExperiment useJavascriptAdditionalLibraryRootsProvider =
-      new BoolExperiment("use.javascript.additional.library.roots.provider", true);
+      new BoolExperiment("use.javascript.additional.library.roots.provider2", true);
 
   @Override
   public Collection<SyntheticLibrary> getAdditionalProjectLibraries(Project project) {
@@ -80,19 +82,18 @@ class BlazeJavascriptAdditionalLibraryRootsProvider extends AdditionalLibraryRoo
           };
       Predicate<ArtifactLocation> isExternal =
           (location) -> {
-            if (!location.isSource) {
+            if (!location.isSource()) {
               return true;
             }
             WorkspacePath workspacePath = WorkspacePath.createIfValid(location.getRelativePath());
             return workspacePath == null || !importRoots.containsWorkspacePath(workspacePath);
           };
       this.files =
-          projectData
-              .targetMap
-              .targets()
-              .stream()
-              .filter(t -> t.jsIdeInfo != null)
-              .flatMap(t -> t.jsIdeInfo.sources.stream())
+          projectData.targetMap.targets().stream()
+              .filter(t -> t.getJsIdeInfo() != null)
+              .map(TargetIdeInfo::getJsIdeInfo)
+              .map(JsIdeInfo::getSources)
+              .flatMap(Collection::stream)
               .filter(isJs)
               .filter(isExternal)
               .distinct()
@@ -104,7 +105,7 @@ class BlazeJavascriptAdditionalLibraryRootsProvider extends AdditionalLibraryRoo
 
     @Override
     public Collection<VirtualFile> getSourceRoots() {
-      return files;
+      return files.stream().filter(VirtualFile::isValid).collect(ImmutableList.toImmutableList());
     }
 
     @Override

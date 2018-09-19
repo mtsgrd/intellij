@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.idea.blaze.base.ideinfo.AndroidSdkIdeInfo;
 import com.google.idea.blaze.base.ideinfo.ArtifactLocation;
 import com.google.idea.blaze.base.ideinfo.LibraryArtifact;
+import com.google.idea.blaze.base.ideinfo.TargetIdeInfo;
 import com.google.idea.blaze.base.ideinfo.TargetMap;
 import com.google.idea.blaze.base.model.BlazeLibrary;
 import com.google.idea.blaze.base.model.BlazeProjectData;
@@ -76,9 +77,8 @@ public class BlazeAndroidLiteSyncPlugin implements BlazeSyncPlugin {
     // for now, just add the first one found
     // TODO: warn if there's more than one
     ArtifactLocation sdk =
-        sdkTargets
-            .stream()
-            .map(info -> info.androidJar)
+        sdkTargets.stream()
+            .map(AndroidSdkIdeInfo::getAndroidJar)
             .filter(Objects::nonNull)
             .findFirst()
             .orElse(null);
@@ -88,10 +88,8 @@ public class BlazeAndroidLiteSyncPlugin implements BlazeSyncPlugin {
   }
 
   private static List<AndroidSdkIdeInfo> androidSdkTargets(TargetMap targetMap) {
-    return targetMap
-        .targets()
-        .stream()
-        .map(target -> target.androidSdkIdeInfo)
+    return targetMap.targets().stream()
+        .map(TargetIdeInfo::getAndroidSdkIdeInfo)
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
   }

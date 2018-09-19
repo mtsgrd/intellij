@@ -81,7 +81,7 @@ public class BlazeAttachSourceProvider implements AttachSourcesProvider {
         continue;
       }
       LibraryArtifact libraryArtifact = blazeLibrary.libraryArtifact;
-      if (libraryArtifact.sourceJars.isEmpty()) {
+      if (libraryArtifact.getSourceJars().isEmpty()) {
         continue;
       }
       librariesToAttachSourceTo.add(blazeLibrary);

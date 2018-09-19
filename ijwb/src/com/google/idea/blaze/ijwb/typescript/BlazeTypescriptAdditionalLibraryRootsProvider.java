@@ -18,6 +18,8 @@ package com.google.idea.blaze.ijwb.typescript;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import com.google.idea.blaze.base.ideinfo.ArtifactLocation;
+import com.google.idea.blaze.base.ideinfo.TargetIdeInfo;
+import com.google.idea.blaze.base.ideinfo.TsIdeInfo;
 import com.google.idea.blaze.base.io.VfsUtils;
 import com.google.idea.blaze.base.model.BlazeProjectData;
 import com.google.idea.blaze.base.model.primitives.LanguageClass;
@@ -44,7 +46,7 @@ import javax.swing.Icon;
  */
 class BlazeTypescriptAdditionalLibraryRootsProvider extends AdditionalLibraryRootsProvider {
   private static final BoolExperiment useTypescriptAdditionalLibraryRootsProvider =
-      new BoolExperiment("use.typescript.additional.library.roots.provider", true);
+      new BoolExperiment("use.typescript.additional.library.roots.provider2", true);
 
   @Override
   public Collection<SyntheticLibrary> getAdditionalProjectLibraries(Project project) {
@@ -78,19 +80,18 @@ class BlazeTypescriptAdditionalLibraryRootsProvider extends AdditionalLibraryRoo
           };
       Predicate<ArtifactLocation> isExternal =
           (location) -> {
-            if (!location.isSource) {
+            if (!location.isSource()) {
               return true;
             }
             WorkspacePath workspacePath = WorkspacePath.createIfValid(location.getRelativePath());
             return workspacePath == null || !importRoots.containsWorkspacePath(workspacePath);
           };
       this.files =
-          projectData
-              .targetMap
-              .targets()
-              .stream()
-              .filter(t -> t.tsIdeInfo != null)
-              .flatMap(t -> t.tsIdeInfo.sources.stream())
+          projectData.targetMap.targets().stream()
+              .filter(t -> t.getTsIdeInfo() != null)
+              .map(TargetIdeInfo::getTsIdeInfo)
+              .map(TsIdeInfo::getSources)
+              .flatMap(Collection::stream)
               .filter(isTs)
               .filter(isExternal)
               .distinct()
@@ -102,7 +103,7 @@ class BlazeTypescriptAdditionalLibraryRootsProvider extends AdditionalLibraryRoo
 
     @Override
     public Collection<VirtualFile> getSourceRoots() {
-      return files;
+      return files.stream().filter(VirtualFile::isValid).collect(ImmutableList.toImmutableList());
     }
 
     @Override

@@ -135,10 +135,10 @@ public class BlazeAndroidProjectStructureSyncer {
     Set<File> existingRoots = Sets.newHashSet();
     for (AndroidResourceModule androidResourceModule : targetToAndroidResourceModule.values()) {
       TargetIdeInfo target = blazeProjectData.targetMap.get(androidResourceModule.targetKey);
-      AndroidIdeInfo androidIdeInfo = target.androidIdeInfo;
+      AndroidIdeInfo androidIdeInfo = target.getAndroidIdeInfo();
       assert androidIdeInfo != null;
 
-      String moduleName = moduleNameForAndroidModule(target.key);
+      String moduleName = moduleNameForAndroidModule(target.getKey());
       Module module = moduleEditor.findModule(moduleName);
       assert module != null;
       ModifiableRootModel modifiableRootModel = moduleEditor.editModule(module);
@@ -188,7 +188,7 @@ public class BlazeAndroidProjectStructureSyncer {
         getRunConfigurationTargets(
             project, projectViewSet, blazeProjectData, targetToAndroidResourceModule.keySet());
     for (TargetIdeInfo target : runConfigurationTargets) {
-      TargetKey targetKey = target.key;
+      TargetKey targetKey = target.getKey();
       String moduleName = moduleNameForAndroidModule(targetKey);
       Module module = moduleEditor.createModule(moduleName, StdModuleTypes.JAVA);
       AndroidFacetModuleCustomizer.createAndroidFacet(module, true);
@@ -278,7 +278,7 @@ public class BlazeAndroidProjectStructureSyncer {
     if (target == null) {
       return null;
     }
-    if (target.androidIdeInfo == null) {
+    if (target.getAndroidIdeInfo() == null) {
       return null;
     }
     // We can't run a write action outside the dispatch thread, and can't
@@ -306,8 +306,8 @@ public class BlazeAndroidProjectStructureSyncer {
         newModule,
         moduleDirectory,
         manifestFileForAndroidTarget(
-            blazeProjectData.artifactLocationDecoder, target.androidIdeInfo, moduleDirectory),
-        target.androidIdeInfo.resourceJavaPackage,
+            blazeProjectData.artifactLocationDecoder, target.getAndroidIdeInfo(), moduleDirectory),
+        target.getAndroidIdeInfo().getResourceJavaPackage(),
         ImmutableList.of(),
         null);
     return newModule;
@@ -387,15 +387,15 @@ public class BlazeAndroidProjectStructureSyncer {
     for (AndroidResourceModule androidResourceModule :
         syncData.importResult.androidResourceModules) {
       TargetIdeInfo target = blazeProjectData.targetMap.get(androidResourceModule.targetKey);
-      String moduleName = moduleNameForAndroidModule(target.key);
+      String moduleName = moduleNameForAndroidModule(target.getKey());
       Module module = moduleFinder.findModuleByName(moduleName);
       if (module == null) {
-        logger.warn("No module found for resource target: " + target.key);
+        logger.warn("No module found for resource target: " + target.getKey());
         continue;
       }
       registry.put(module, androidResourceModule);
 
-      AndroidIdeInfo androidIdeInfo = target.androidIdeInfo;
+      AndroidIdeInfo androidIdeInfo = target.getAndroidIdeInfo();
       assert androidIdeInfo != null;
 
       List<File> resources =
@@ -412,30 +412,27 @@ public class BlazeAndroidProjectStructureSyncer {
               artifactLocationDecoder,
               androidIdeInfo,
               moduleDirectoryForAndroidTarget(workspaceRoot, target)),
-          androidIdeInfo.resourceJavaPackage,
+          androidIdeInfo.getResourceJavaPackage(),
           resources,
           resourceRepositoryExecutor);
-      rClassBuilder.addRClass(androidIdeInfo.resourceJavaPackage, module);
+      rClassBuilder.addRClass(androidIdeInfo.getResourceJavaPackage(), module);
     }
 
     Set<TargetKey> androidResourceModules =
-        syncData
-            .importResult
-            .androidResourceModules
-            .stream()
+        syncData.importResult.androidResourceModules.stream()
             .map(androidResourceModule -> androidResourceModule.targetKey)
             .collect(toSet());
     List<TargetIdeInfo> runConfigurationTargets =
         getRunConfigurationTargets(
             project, projectViewSet, blazeProjectData, androidResourceModules);
     for (TargetIdeInfo target : runConfigurationTargets) {
-      String moduleName = moduleNameForAndroidModule(target.key);
+      String moduleName = moduleNameForAndroidModule(target.getKey());
       Module module = moduleFinder.findModuleByName(moduleName);
       if (module == null) {
-        logger.warn("No module found for run configuration target: " + target.key);
+        logger.warn("No module found for run configuration target: " + target.getKey());
         continue;
       }
-      AndroidIdeInfo androidIdeInfo = target.androidIdeInfo;
+      AndroidIdeInfo androidIdeInfo = target.getAndroidIdeInfo();
       assert androidIdeInfo != null;
       updateModuleFacetInMemoryState(
           project,
@@ -446,7 +443,7 @@ public class BlazeAndroidProjectStructureSyncer {
               artifactLocationDecoder,
               androidIdeInfo,
               moduleDirectoryForAndroidTarget(workspaceRoot, target)),
-          androidIdeInfo.resourceJavaPackage,
+          androidIdeInfo.getResourceJavaPackage(),
           ImmutableList.of(),
           null);
     }
@@ -454,14 +451,14 @@ public class BlazeAndroidProjectStructureSyncer {
 
   private static File moduleDirectoryForAndroidTarget(
       WorkspaceRoot workspaceRoot, TargetIdeInfo target) {
-    return workspaceRoot.fileForPath(target.key.label.blazePackage());
+    return workspaceRoot.fileForPath(target.getKey().getLabel().blazePackage());
   }
 
   private static File manifestFileForAndroidTarget(
       ArtifactLocationDecoder artifactLocationDecoder,
       AndroidIdeInfo androidIdeInfo,
       File moduleDirectory) {
-    ArtifactLocation manifestArtifactLocation = androidIdeInfo.manifest;
+    ArtifactLocation manifestArtifactLocation = androidIdeInfo.getManifest();
     return manifestArtifactLocation != null
         ? artifactLocationDecoder.decode(manifestArtifactLocation)
         : new File(moduleDirectory, "AndroidManifest.xml");

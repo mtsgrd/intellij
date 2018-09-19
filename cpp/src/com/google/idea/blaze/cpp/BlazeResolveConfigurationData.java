@@ -51,20 +51,20 @@ final class BlazeResolveConfigurationData {
       BlazeCompilerSettings compilerSettings,
       CompilerInfoCacheAdapter compilerInfoCache) {
     ImmutableSet.Builder<ExecutionRootPath> systemIncludesBuilder = ImmutableSet.builder();
-    systemIncludesBuilder.addAll(cIdeInfo.transitiveSystemIncludeDirectories);
-    systemIncludesBuilder.addAll(toolchainIdeInfo.builtInIncludeDirectories);
-    systemIncludesBuilder.addAll(toolchainIdeInfo.unfilteredToolchainSystemIncludes);
+    systemIncludesBuilder.addAll(cIdeInfo.getTransitiveSystemIncludeDirectories());
+    systemIncludesBuilder.addAll(toolchainIdeInfo.getBuiltInIncludeDirectories());
+    systemIncludesBuilder.addAll(toolchainIdeInfo.getUnfilteredToolchainSystemIncludes());
 
     ImmutableSet.Builder<ExecutionRootPath> userIncludesBuilder = ImmutableSet.builder();
-    userIncludesBuilder.addAll(cIdeInfo.transitiveIncludeDirectories);
-    userIncludesBuilder.addAll(cIdeInfo.localIncludeDirectories);
+    userIncludesBuilder.addAll(cIdeInfo.getTransitiveIncludeDirectories());
+    userIncludesBuilder.addAll(cIdeInfo.getLocalIncludeDirectories());
 
     ImmutableSet.Builder<ExecutionRootPath> userQuoteIncludesBuilder = ImmutableSet.builder();
-    userQuoteIncludesBuilder.addAll(cIdeInfo.transitiveQuoteIncludeDirectories);
+    userQuoteIncludesBuilder.addAll(cIdeInfo.getTransitiveQuoteIncludeDirectories());
 
     ImmutableList.Builder<String> defines = ImmutableList.builder();
-    defines.addAll(cIdeInfo.transitiveDefines);
-    defines.addAll(cIdeInfo.localDefines);
+    defines.addAll(cIdeInfo.getTransitiveDefines());
+    defines.addAll(cIdeInfo.getLocalDefines());
 
     ImmutableMap<String, String> features = ImmutableMap.of();
 

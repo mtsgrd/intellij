@@ -100,16 +100,16 @@ class BlazeGoImportResolver implements GoImportResolver {
         .get(
             GO_TARGET_MAP_KEY,
             (p, projectData) ->
-                projectData
-                    .targetMap
-                    .targets()
-                    .stream()
-                    .filter(t -> t.goIdeInfo != null)
+                projectData.targetMap.targets().stream()
+                    .filter(t -> t.getGoIdeInfo() != null)
                     .collect(
                         // guaranteed unique per importpath in blaze
                         // warning in bazel if not unique
                         // we'll just ignore duplicates
-                        Collectors.toMap(t -> t.goIdeInfo.importPath, t -> t.key, (k1, k2) -> k1)));
+                        Collectors.toMap(
+                            t -> t.getGoIdeInfo().getImportPath(),
+                            TargetIdeInfo::getKey,
+                            (k1, k2) -> k1)));
   }
 
   @Nullable

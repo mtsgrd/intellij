@@ -33,10 +33,20 @@ import javax.annotation.Nullable;
 /** Provides the editor environment used for debugger evaluation. */
 class SkylarkDebuggerEditorsProvider extends XDebuggerEditorsProvider {
 
+  /** #api171: deprecated after 171: remove when we no longer support that version. */
   @Override
   public Document createDocument(
       Project project,
       XExpression expression,
+      @Nullable XSourcePosition sourcePosition,
+      EvaluationMode mode) {
+    return createDocument(project, expression.getExpression(), sourcePosition, mode);
+  }
+
+  @Override
+  public Document createDocument(
+      Project project,
+      String expression,
       @Nullable XSourcePosition sourcePosition,
       EvaluationMode mode) {
     PsiElement context = null;
@@ -44,7 +54,7 @@ class SkylarkDebuggerEditorsProvider extends XDebuggerEditorsProvider {
       context = getContextElement(sourcePosition.getFile(), sourcePosition.getOffset(), project);
     }
     PsiFile codeFragment =
-        createExpressionCodeFragment(project, expression.getExpression(), sourcePosition, context);
+        createExpressionCodeFragment(project, expression, sourcePosition, context);
     Document document = PsiDocumentManager.getInstance(project).getDocument(codeFragment);
     assert document != null;
     return document;

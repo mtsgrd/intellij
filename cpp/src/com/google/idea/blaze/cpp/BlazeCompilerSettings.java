@@ -49,8 +49,8 @@ final class BlazeCompilerSettings extends OCCompilerSettingsAdapter {
     this.project = project;
     this.cCompiler = cCompiler;
     this.cppCompiler = cppCompiler;
-    this.cCompilerSwitches = getCompilerSwitches(cFlags);
-    this.cppCompilerSwitches = getCompilerSwitches(cppFlags);
+    this.cCompilerSwitches = getCompilerSwitches(project, cFlags);
+    this.cppCompilerSwitches = getCompilerSwitches(project, cppFlags);
     this.compilerVersion = compilerVersion;
     this.compilerInfoCache = compilerInfoCache;
   }
@@ -91,8 +91,10 @@ final class BlazeCompilerSettings extends OCCompilerSettingsAdapter {
     return new CidrSwitchBuilder().build();
   }
 
-  private static CidrCompilerSwitches getCompilerSwitches(List<String> allCompilerFlags) {
-    return new CidrSwitchBuilder().addAllRaw(allCompilerFlags).build();
+  private static CidrCompilerSwitches getCompilerSwitches(
+      Project project, List<String> allCompilerFlags) {
+    List<String> processed = BlazeCompilerFlagsProcessor.process(project, allCompilerFlags);
+    return new CidrSwitchBuilder().addAllRaw(processed).build();
   }
 
   String getCompilerVersion() {

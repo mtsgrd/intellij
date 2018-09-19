@@ -108,12 +108,10 @@ public class BlazeIntellijPluginConfigurationType implements ConfigurationType {
       if (projectData == null) {
         return null;
       }
-      return projectData
-          .targetMap
-          .targets()
-          .stream()
+      return projectData.targetMap.targets().stream()
           .filter(IntellijPluginRule::isPluginTarget)
-          .map(t -> t.key.label)
+          .map(TargetIdeInfo::getKey)
+          .map(TargetKey::getLabel)
           .findFirst()
           .orElse(null);
     }

@@ -124,8 +124,7 @@ public class BlazeBuildService {
     FocusBehavior problemsViewFocus = BlazeUserSettings.getInstance().getShowProblemsViewOnRun();
     @SuppressWarnings("unused") // go/futurereturn-lsc
     Future<?> possiblyIgnoredError =
-        ProgressiveTaskWithProgressIndicator.builder(project)
-            .setTitle("Building targets")
+        ProgressiveTaskWithProgressIndicator.builder(project, "Building targets")
             .submitTaskWithResult(
                 new ScopedTask<Void>() {
                   @Override

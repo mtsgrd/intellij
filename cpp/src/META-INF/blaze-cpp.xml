@@ -35,6 +35,11 @@
     </component>
   </project-components>
 
+  <extensionPoints>
+    <extensionPoint qualifiedName="com.google.idea.blaze.cpp.BlazeCompilerFlagsProcessor"
+                    interface="com.google.idea.blaze.cpp.BlazeCompilerFlagsProcessor"/>
+  </extensionPoints>
+
   <extensions defaultExtensionNs="com.google.idea.blaze">
     <SyncPlugin implementation="com.google.idea.blaze.cpp.BlazeCSyncPlugin"/>
     <PrefetchFileSource implementation="com.google.idea.blaze.cpp.CPrefetchFileSource"/>

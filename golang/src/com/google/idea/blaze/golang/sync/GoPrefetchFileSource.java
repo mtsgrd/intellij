@@ -17,6 +17,8 @@ package com.google.idea.blaze.golang.sync;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.idea.blaze.base.ideinfo.ArtifactLocation;
+import com.google.idea.blaze.base.ideinfo.GoIdeInfo;
+import com.google.idea.blaze.base.ideinfo.TargetIdeInfo;
 import com.google.idea.blaze.base.model.BlazeProjectData;
 import com.google.idea.blaze.base.model.primitives.LanguageClass;
 import com.google.idea.blaze.base.model.primitives.WorkspacePath;
@@ -26,6 +28,7 @@ import com.google.idea.blaze.base.sync.projectview.ImportRoots;
 import com.google.idea.common.experiments.BoolExperiment;
 import com.intellij.openapi.project.Project;
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -54,16 +57,15 @@ public class GoPrefetchFileSource implements PrefetchFileSource {
           if (location.isGenerated()) {
             return true;
           }
-          WorkspacePath path = WorkspacePath.createIfValid(location.relativePath);
+          WorkspacePath path = WorkspacePath.createIfValid(location.getRelativePath());
           return path != null && !importRoots.containsWorkspacePath(path);
         };
     List<File> sourceFiles =
-        blazeProjectData
-            .targetMap
-            .targets()
-            .stream()
-            .filter(t -> t.goIdeInfo != null)
-            .flatMap(t -> t.goIdeInfo.sources.stream())
+        blazeProjectData.targetMap.targets().stream()
+            .filter(t -> t.getGoIdeInfo() != null)
+            .map(TargetIdeInfo::getGoIdeInfo)
+            .map(GoIdeInfo::getSources)
+            .flatMap(Collection::stream)
             .filter(shouldPrefetch)
             .map(blazeProjectData.artifactLocationDecoder::decode)
             .collect(Collectors.toList());
