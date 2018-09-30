@@ -30,15 +30,21 @@ import com.google.idea.blaze.base.projectview.section.sections.DirectorySection;
 import com.google.idea.blaze.base.settings.Blaze;
 import com.google.idea.blaze.base.settings.BuildSystem;
 import com.google.idea.blaze.base.util.WorkspacePathUtil;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Scanner;
 import java.util.Set;
 import javax.annotation.Nullable;
 
 /** The roots to import. Derived from project view. */
 public final class ImportRoots {
+
+  private static final Logger logger = Logger.getInstance(ImportRoots.class);
 
   /** Returns the ImportRoots for the project, or null if it's not a blaze project. */
   @Nullable
@@ -90,6 +96,7 @@ public final class ImportRoots {
       // (e.g. bazel-bin, bazel-genfiles).
       if (buildSystem == BuildSystem.Bazel && hasWorkspaceRoot(rootDirectories)) {
         excludeBuildSystemArtifacts();
+        excludeIgnoredDirectories();
       }
       ImmutableSet<WorkspacePath> minimalExcludes =
           WorkspacePathUtil.calculateMinimalWorkspacePaths(excludeDirectoriesBuilder.build());
@@ -106,6 +113,21 @@ public final class ImportRoots {
           BuildSystemProvider.getBuildSystemProvider(buildSystem)
               .buildArtifactDirectories(workspaceRoot)) {
         excludeDirectoriesBuilder.add(new WorkspacePath(dir));
+      }
+    }
+
+    private void excludeIgnoredDirectories() {
+      File ignoreFile = workspaceRoot.fileForPath(new WorkspacePath(".bazelignore"));
+      if (!ignoreFile.exists()) {
+        return;
+      }
+      try {
+        Scanner reader = new Scanner(ignoreFile);
+        while (reader.hasNextLine()) {
+          excludeDirectoriesBuilder.add(new WorkspacePath(reader.nextLine()));
+        }
+      } catch (FileNotFoundException e) {
+        logger.warn(e);
       }
     }
 
