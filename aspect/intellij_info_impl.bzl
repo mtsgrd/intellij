@@ -237,7 +237,7 @@ def collect_go_info(target, ctx, semantics, ide_info, ide_info_file, output_grou
         generated += target.files.to_list()
     elif ctx.rule.kind == 'go_proto_library':
         proto_files = getattr(target[GoSource], "srcs", [])
-        proto_sources = [f for f in files if f.basename.endswith(".pb.go")]
+        proto_sources = [f for f in proto_files if f.basename.endswith(".pb.go")]
         if not proto_sources:
             return False
         sources += proto_sources
