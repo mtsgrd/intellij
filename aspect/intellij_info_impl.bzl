@@ -30,6 +30,7 @@ DEPS = [
     "malloc",  # From cc_binary rules
     "_java_toolchain",  # From java rules
     "deps",
+    "embed",
     "exports",
     "java_lib",  # From old proto_library rules
     "_android_sdk",  # from android rules
@@ -237,7 +238,7 @@ def collect_go_info(target, ctx, semantics, ide_info, ide_info_file, output_grou
         generated += target.files.to_list()
     elif ctx.rule.kind == 'go_proto_library':
         proto_files = getattr(target[GoSource], "srcs", [])
-        proto_sources = [f for f in proto_files if f.basename.endswith(".pb.go")]
+        proto_sources = [f for f in proto_files if ".pb" in f.basename and ".go" in f.basename]
         if not proto_sources:
             return False
         sources += proto_sources
