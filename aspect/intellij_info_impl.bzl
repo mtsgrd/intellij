@@ -243,6 +243,8 @@ def collect_go_info(target, ctx, semantics, ide_info, ide_info_file, output_grou
             return False
         sources += proto_sources
         generated += proto_sources
+    else:
+        return False
 
     import_path = None
     go_semantics = getattr(semantics, "go", None)
